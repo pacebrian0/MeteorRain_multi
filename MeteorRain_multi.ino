@@ -53,8 +53,8 @@ bgred, bggreen, bgblue: background colours for LED strip
 
 PixelStrip strips[] = {
   // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue
-  { Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10 },
-  { Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10 },
+  { Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 2, 2, 2 },
+  { Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2 },
   { Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10 },
   { Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10 },
   { Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10 },
@@ -69,33 +69,35 @@ PixelStrip strips[] = {
 #define NUMSTRIPS (sizeof(strips) / sizeof(strips[0]))
 
 // speed for screen wipe at the beginning
-#define WIPESPEED 500
+#define WIPESPEED 50
 
 
 void setup() {
-  //Serial.begin(115200);
+  Serial.begin(115200);
   byte max_numleds = 0;
 
   for (int i = 0; i < NUMSTRIPS; i++) {
     if (strips[i].numleds > max_numleds) max_numleds = strips[i].numleds;
   }
-
+  
   for (int i = 0; i < NUMSTRIPS; i++) {
     strips[i].strip.begin();
     strips[i].strip.show();  // Initialize all pixels to 'off'
+    setAll(&(strips[i]), 0, 0, 0);
+    
   }
 
   //perform screen wipe
   for (int i = 0; i < max_numleds; i++) {
     screenWipe();
-    delay(1);
+    delay(WIPESPEED);
   }
 
-  //reset led counter and countdown
+  //reset led counter 
   for (int i = 0; i < NUMSTRIPS; i++) {
     strips[i].currled = 0;
-    strips[i].countdown = 0;
   }
+  delay(1000);
 }
 
 void screenWipe() {
@@ -107,22 +109,14 @@ void screenWipe() {
       continue;
     }
 
-    // if countdown is non-0, wait
-    if (strips[k].countdown != 0) {
-      //Serial.println(strips[k].countdown);
-      strips[k].countdown--;
-      continue;
-    }
-
     // draw screen
-    if ((strips[k].currled < strips[k].numleds) && (strips[k].currled >= 0)) {
+    if ((strips[k].currled <= strips[k].numleds) && (strips[k].currled >= 0)) {
       setPixel(&strips[k].strip, strips[k].currled, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
     }
 
-
+    
     showStrip(&(strips[k].strip));
     strips[k].currled++;
-    strips[k].countdown = WIPESPEED;
   }
 }
 
@@ -218,7 +212,7 @@ void meteorRain() {
 
     // fade brightness all LEDs one step
     for (int j = 0; j < strips[k].numleds; j++) {
-      if ((!strips[k].meteorrandomdecay) || (random(10) > 5)) {
+      if ((!strips[k].meteorrandomdecay) || (random(10) > 3)) { // REDUCE LAST NUMBER TO PREVENT STUCK PIXELS ON FADE
         fadeToColor(&(strips[k].strip), j, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
       }
     }
