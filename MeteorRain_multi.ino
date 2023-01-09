@@ -20,8 +20,8 @@ typedef struct PixelStrip {
   byte meteortraildecay;
   bool meteorrandomdecay;
   byte speeddelay;
-  byte currled;
-  byte numleds;
+  int16_t currled;
+  int16_t numleds;
   int countdown;
   bool endrandom;
   int16_t enddelay;
@@ -35,6 +35,7 @@ typedef struct PixelStrip {
   byte bgblue;
   byte fadeinlength;
   byte fadeinstrength;
+  bool reverse;
 } PixelStrip;
 
 /*************************************************************
@@ -57,18 +58,19 @@ randombegindelayend: maximum time taken to start first meteor
 bgred, bggreen, bgblue: background colours for LED strip
 fadeinlength: bigger number = number of LEDS for meteor fade-in
 fadeinstrength: 0-255 how bright is the fade-in. Bigger number = brighter
+reverse: set to true to reverse the animation
 *************************************************************/
 
 PixelStrip strips[] = {
-  // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength
-  { Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4,  2, 127 },
-  //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50 },
-  //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50 },
-  //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50 },
-  //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50 },
-  //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50 },
-  { Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32 },
-  //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50 },
+  // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse
+  { Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4,  2, 127, false },
+  //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50, false },
+  //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
+  //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
+  //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
+  //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
+  { Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true },
+  //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
 
 };
 
@@ -81,7 +83,7 @@ PixelStrip strips[] = {
 
 
 void setup() {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   byte max_numleds = 0;
 
   for (int i = 0; i < NUMSTRIPS; i++) {
@@ -119,7 +121,10 @@ void screenWipe() {
 
     // draw screen
     if ((strips[k].currled <= strips[k].numleds) && (strips[k].currled >= 0)) {
-      setPixel(&strips[k].strip, strips[k].currled, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+      if(strips[k].reverse) 
+        setPixel(&strips[k].strip, strips[k].numleds - strips[k].currled - 1, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+      else 
+        setPixel(&strips[k].strip, strips[k].currled, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
     }
 
     
@@ -145,13 +150,12 @@ void printColor(Adafruit_NeoPixel *strip, int ledNo)
   r = (oldColor & 0x00ff0000UL) >> 16;
   g = (oldColor & 0x0000ff00UL) >> 8;
   b = (oldColor & 0x000000ffUL);
-  // Serial.print("\t");
-  // Serial.print(r);
-  // Serial.print(" ");
-  // Serial.print(g);
-  // Serial.print(" ");
-  // Serial.print(b);
-  // Serial.print("\t");
+  Serial.print(r);
+  Serial.print(" ");
+  Serial.print(g);
+  Serial.print(" ");
+  Serial.print(b);
+  Serial.print("\t");
 }
 
 void fadeToColor(Adafruit_NeoPixel *strip, int ledNo, byte fadeValue, byte bgred, byte bggreen, byte bgblue) {
@@ -264,7 +268,9 @@ void meteorRain() {
       strips[k].countdown = (rand() % (strips[k].randombegindelayend - strips[k].randombegindelaystart + 1)) + strips[k].randombegindelaystart;
       continue;
     }
-
+   
+    // Serial.print(strips[k].currled);
+    // Serial.print(" ");
     // Serial.print(strips[k].red);
     // Serial.print(" ");
     // Serial.print(strips[k].green);
@@ -276,16 +282,24 @@ void meteorRain() {
     // Serial.print(strips[k].bggreen);
     // Serial.print(" ");
     // Serial.print(strips[k].bgblue);
+    // Serial.print(" ");
+    // Serial.print(strips[k].reverse?"r":"");
+    // Serial.print(" ");
+    // Serial.print(strips[k].reverse?strips[k].numleds - strips[k].currled - 1:0);
+    
     // Serial.print("\t");
-    // printColor(&(strips[k].strip),20);
-    //Serial.println(" "); 
+    // printColor(&(strips[k].strip),35);
+    // Serial.println(" "); 
 
     // fade brightness all LEDs one step
     for (int j = 0; j < strips[k].currled -strips[k].meteorsize - strips[k].fadeinlength; j++) {
       //Serial.print(strips[k].currled);
       if ((!strips[k].meteorrandomdecay) || (random(10) > 3)) { // REDUCE LAST NUMBER TO PREVENT STUCK PIXELS ON FADE
       
-        fadeToColor(&(strips[k].strip), j, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+        if(strips[k].reverse)
+          fadeToColor(&(strips[k].strip), strips[k].numleds - j - 1, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+        else
+          fadeToColor(&(strips[k].strip), j, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
       }
     }
 
@@ -305,7 +319,10 @@ void meteorRain() {
           // Serial.print(" gaining RGB "); 
           // Serial.print(j); 
           // Serial.print(": "); 
-          applyGainStep(&(strips[k].strip), strips[k].currled - j, strips[k].bgred, strips[k].bggreen, strips[k].bgblue, strips[k].red, strips[k].green, strips[k].blue, j + 1, strips[k].fadeinlength , strips[k].fadeinstrength);
+          if(strips[k].reverse)
+            applyGainStep(&(strips[k].strip), strips[k].numleds - strips[k].currled - 1 + j, strips[k].bgred, strips[k].bggreen, strips[k].bgblue, strips[k].red, strips[k].green, strips[k].blue, j + 1, strips[k].fadeinlength , strips[k].fadeinstrength);
+          else          
+            applyGainStep(&(strips[k].strip), strips[k].currled - j, strips[k].bgred, strips[k].bggreen, strips[k].bgblue, strips[k].red, strips[k].green, strips[k].blue, j + 1, strips[k].fadeinlength , strips[k].fadeinstrength);
           //gainToColor(&(strips[k].strip), strips[k].currled - j, 64, strips[k].red, strips[k].green, strips[k].blue);
 
         }
@@ -314,8 +331,11 @@ void meteorRain() {
           //Serial.print("\t meteor \t");
           //Serial.print(strips[k].red);
           }
-          setPixel(&strips[k].strip, strips[k].currled - j, strips[k].red, strips[k].green, strips[k].blue);
-          printColor(&strips[k].strip, strips[k].currled - j);
+          if(strips[k].reverse)
+            setPixel(&strips[k].strip, strips[k].numleds - strips[k].currled + j - 1, strips[k].red, strips[k].green, strips[k].blue);          
+          else
+            setPixel(&strips[k].strip, strips[k].currled - j, strips[k].red, strips[k].green, strips[k].blue);
+          //printColor(&strips[k].strip, strips[k].currled - j);
         }
       }
     }
