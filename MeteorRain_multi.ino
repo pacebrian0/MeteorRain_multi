@@ -81,6 +81,12 @@ PixelStrip strips[] = {
 // speed for screen wipe at the beginning
 #define WIPESPEED 50
 
+// enable controller trigger
+#define REMOTE true
+
+// controller pin (ignore if REMOTE is false)
+#define REMOTEPIN 1
+
 
 void setup() {
   //Serial.begin(115200);
@@ -112,24 +118,24 @@ void setup() {
 
 void screenWipe() {
   for (int k = 0; k < NUMSTRIPS; k++) {
-
+    PixelStrip s = strips[k];
     // end of meteor animation
-    if (strips[k].currled > strips[k].numleds) {
+    if (s.currled > s.numleds) {
 
       continue;
     }
 
     // draw screen
-    if ((strips[k].currled <= strips[k].numleds) && (strips[k].currled >= 0)) {
-      if(strips[k].reverse) 
-        setPixel(&strips[k].strip, strips[k].numleds - strips[k].currled - 1, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+    if ((s.currled <= s.numleds) && (s.currled >= 0)) {
+      if(s.reverse) 
+        setPixel(&s.strip, s.numleds - s.currled - 1, s.bgred, s.bggreen, s.bgblue);
       else 
-        setPixel(&strips[k].strip, strips[k].currled, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+        setPixel(&s.strip, s.currled, s.bgred, s.bggreen, s.bgblue);
     }
 
     
-    showStrip(&(strips[k].strip));
-    strips[k].currled++;
+    showStrip(&(s.strip));
+    s.currled++;
   }
 }
 
@@ -241,108 +247,109 @@ void applyGainStep(Adafruit_NeoPixel *strip, int ledNo,  byte bgred, byte bggree
 
 void meteorRain() {
   for (int k = 0; k < NUMSTRIPS; k++) {
-
+    PixelStrip s = strips[k];
     // end of meteor animation
-    if (strips[k].currled > (strips[k].numleds * 2) + strips[k].fadeinlength) {
-      strips[k].currled = 0;
-      if (strips[k].endrandom) {
-        strips[k].countdown = (rand() % (strips[k].randomenddelayend - strips[k].randomenddelaystart + 1)) + strips[k].randomenddelaystart;
+    if (s.currled > (s.numleds * 2) + s.fadeinlength) {
+      s.currled = 0;
+      if (s.endrandom) {
+        s.countdown = (rand() % (s.randomenddelayend - s.randomenddelaystart + 1)) + s.randomenddelaystart;
       } else {
-        strips[k].countdown = strips[k].enddelay;
+        s.countdown = s.enddelay;
       }
 
-      setAll(&(strips[k]), strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+      setAll(&(s), s.bgred, s.bggreen, s.bgblue);
       continue;
     }
 
     // delay countdown to start new meteor
-    if (strips[k].countdown != 0) {
-      //Serial.println(strips[k].countdown);
-      strips[k].countdown--;
+    if (s.countdown != 0) {
+      //Serial.println(s.countdown);
+      
+      s.countdown--;
       continue;
     }
 
     // beginning of animation
-    if (strips[k].beginrandom && strips[k].countdown == 0 && strips[k].currled == 0) {
-      strips[k].beginrandom = false;
-      strips[k].countdown = (rand() % (strips[k].randombegindelayend - strips[k].randombegindelaystart + 1)) + strips[k].randombegindelaystart;
+    if (s.beginrandom && s.countdown == 0 && s.currled == 0) {
+      s.beginrandom = false;
+      s.countdown = (rand() % (s.randombegindelayend - s.randombegindelaystart + 1)) + s.randombegindelaystart;
       continue;
     }
    
-    // Serial.print(strips[k].currled);
+    // Serial.print(s.currled);
     // Serial.print(" ");
-    // Serial.print(strips[k].red);
+    // Serial.print(s.red);
     // Serial.print(" ");
-    // Serial.print(strips[k].green);
+    // Serial.print(s.green);
     // Serial.print(" ");
-    // Serial.print(strips[k].blue);
+    // Serial.print(s.blue);
     // Serial.print("\t");
-    // Serial.print(strips[k].bgred);
+    // Serial.print(s.bgred);
     // Serial.print(" ");
-    // Serial.print(strips[k].bggreen);
+    // Serial.print(s.bggreen);
     // Serial.print(" ");
-    // Serial.print(strips[k].bgblue);
+    // Serial.print(s.bgblue);
     // Serial.print(" ");
-    // Serial.print(strips[k].reverse?"r":"");
+    // Serial.print(s.reverse?"r":"");
     // Serial.print(" ");
-    // Serial.print(strips[k].reverse?strips[k].numleds - strips[k].currled - 1:0);
+    // Serial.print(s.reverse?s.numleds - s.currled - 1:0);
     
     // Serial.print("\t");
-    // printColor(&(strips[k].strip),35);
+    // printColor(&(s.strip),35);
     // Serial.println(" "); 
 
     // fade brightness all LEDs one step
-    for (int j = 0; j < strips[k].currled -strips[k].meteorsize - strips[k].fadeinlength; j++) {
-      //Serial.print(strips[k].currled);
-      if ((!strips[k].meteorrandomdecay) || (random(10) > 3)) { // REDUCE LAST NUMBER TO PREVENT STUCK PIXELS ON FADE
+    for (int j = 0; j < s.currled -s.meteorsize - s.fadeinlength; j++) {
+      //Serial.print(s.currled);
+      if ((!s.meteorrandomdecay) || (random(10) > 3)) { // REDUCE LAST NUMBER TO PREVENT STUCK PIXELS ON FADE
       
-        if(strips[k].reverse)
-          fadeToColor(&(strips[k].strip), strips[k].numleds - j - 1, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+        if(s.reverse)
+          fadeToColor(&(s.strip), s.numleds - j - 1, s.meteortraildecay, s.bgred, s.bggreen, s.bgblue);
         else
-          fadeToColor(&(strips[k].strip), j, strips[k].meteortraildecay, strips[k].bgred, strips[k].bggreen, strips[k].bgblue);
+          fadeToColor(&(s.strip), j, s.meteortraildecay, s.bgred, s.bggreen, s.bgblue);
       }
     }
 
-    // Serial.print(strips[k].red);
+    // Serial.print(s.red);
     // Serial.print(" ");
-    // Serial.print(strips[k].green);
+    // Serial.print(s.green);
     // Serial.print(" ");
-    // Serial.print(strips[k].blue);
+    // Serial.print(s.blue);
     // Serial.println(" ");
     // draw meteor
-    for (int j = 0; j < strips[k].meteorsize + strips[k].fadeinlength; j++) {
-      if ((strips[k].currled - j < strips[k].numleds) && (strips[k].currled - j >= 0)) { 
-          // Serial.print(strips[k].currled);
+    for (int j = 0; j < s.meteorsize + s.fadeinlength; j++) {
+      if ((s.currled - j < s.numleds) && (s.currled - j >= 0)) { 
+          // Serial.print(s.currled);
       
 
-        if(j < strips[k].fadeinlength){
+        if(j < s.fadeinlength){
           // Serial.print(" gaining RGB "); 
           // Serial.print(j); 
           // Serial.print(": "); 
-          if(strips[k].reverse)
-            applyGainStep(&(strips[k].strip), strips[k].numleds - strips[k].currled - 1 + j, strips[k].bgred, strips[k].bggreen, strips[k].bgblue, strips[k].red, strips[k].green, strips[k].blue, j + 1, strips[k].fadeinlength , strips[k].fadeinstrength);
+          if(s.reverse)
+            applyGainStep(&(s.strip), s.numleds - s.currled - 1 + j, s.bgred, s.bggreen, s.bgblue, s.red, s.green, s.blue, j + 1, s.fadeinlength , s.fadeinstrength);
           else          
-            applyGainStep(&(strips[k].strip), strips[k].currled - j, strips[k].bgred, strips[k].bggreen, strips[k].bgblue, strips[k].red, strips[k].green, strips[k].blue, j + 1, strips[k].fadeinlength , strips[k].fadeinstrength);
-          //gainToColor(&(strips[k].strip), strips[k].currled - j, 64, strips[k].red, strips[k].green, strips[k].blue);
+            applyGainStep(&(s.strip), s.currled - j, s.bgred, s.bggreen, s.bgblue, s.red, s.green, s.blue, j + 1, s.fadeinlength , s.fadeinstrength);
+          //gainToColor(&(s.strip), s.currled - j, 64, s.red, s.green, s.blue);
 
         }
         else{
-          if(strips[k].currled - j == 20){
+          if(s.currled - j == 20){
           //Serial.print("\t meteor \t");
-          //Serial.print(strips[k].red);
+          //Serial.print(s.red);
           }
-          if(strips[k].reverse)
-            setPixel(&strips[k].strip, strips[k].numleds - strips[k].currled + j - 1, strips[k].red, strips[k].green, strips[k].blue);          
+          if(s.reverse)
+            setPixel(&s.strip, s.numleds - s.currled + j - 1, s.red, s.green, s.blue);          
           else
-            setPixel(&strips[k].strip, strips[k].currled - j, strips[k].red, strips[k].green, strips[k].blue);
-          //printColor(&strips[k].strip, strips[k].currled - j);
+            setPixel(&s.strip, s.currled - j, s.red, s.green, s.blue);
+          //printColor(&s.strip, s.currled - j);
         }
       }
     }
 
-    showStrip(&(strips[k].strip));
-    strips[k].currled++;
-    strips[k].countdown = strips[k].speeddelay;
+    showStrip(&(s.strip));
+    s.currled++;
+    s.countdown = s.speeddelay;
     //Serial.println(" "); 
   }
   //delay(200);
