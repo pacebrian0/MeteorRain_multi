@@ -60,17 +60,19 @@ bgred, bggreen, bgblue: background colours for LED strip
 fadeinlength: bigger number = number of LEDS for meteor fade-in
 fadeinstrength: 0-255 how bright is the fade-in. Bigger number = brighter
 reverse: set to true to reverse the animation
+ledGroup: used to group up different led strips to begin together e.g. strip 1 & 2, strip 3 & 4... Begin from 0
+isFinished: used to determine when an animation is finished. Leave as-is
 *************************************************************/
 
 PixelStrip strips[] = {
-    // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse
-    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false},
+    // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse  ledGroup isFinished
+    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, true},
     //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
-    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true},
+    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, true},
     //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
 
 };
@@ -92,6 +94,9 @@ bool STARTANIMATION = false;
 bool ANIMATIONINPROGRESS = false;
 unsigned long previousTime = 0;  // to measure loop time per millisecond precisely
 unsigned long currentTime = 0;  // to keep track of current ms
+int currLedGroup = 0;
+int resetTimer = 1000;  // if you want a specific animation to always start from the same state, take note of when the longest strip finishes.
+bool waitForFinish = true; //if true, strips will wait for everyone to be ready before initiating next loop
 
 void setup()
 {
@@ -153,18 +158,23 @@ void screenWipe()
     s->currled++;
   }
 }
+void checkPin()
+{
+
+
+}
 
 void loop()
 {
-
+  checkPins();  
   if (!STARTANIMATION)
     STARTANIMATION = digitalRead(REMOTEPIN) == HIGH ? true : false;
 
   // Serial.println(sizeof(strips));
   // Serial.println(sizeof(strips[0]));
   
-
-  unsigned long currentTime = millis();
+  
+  currentTime = millis();
   if (currentTime > previousTime)
   {
     meteorRain();
