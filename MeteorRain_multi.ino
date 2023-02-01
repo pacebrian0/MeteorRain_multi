@@ -37,7 +37,8 @@ typedef struct PixelStrip
   byte fadeinlength;
   byte fadeinstrength;
   bool reverse;
-  int ledGroup;  
+  int ledGroup;
+  bool remoteStart;  
 } PixelStrip;
 
 /*************************************************************
@@ -62,18 +63,18 @@ fadeinlength: bigger number = number of LEDS for meteor fade-in
 fadeinstrength: 0-255 how bright is the fade-in. Bigger number = brighter
 reverse: set to true to reverse the animation
 ledGroup: used to group up different led strips to begin together e.g. strip 1 & 2, strip 3 & 4... Begin from 0
-//isFinished: used to determine when an animation is finished. Leave as-is
+remoteStart: used to determine when to start animation when using remote trigger. Leave as-is
 *************************************************************/
 
 PixelStrip strips[] = {
     // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse  ledGroup
-    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0},
+    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, false},
     //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
-    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1},
+    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, false},
     //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
 
 };
@@ -89,7 +90,7 @@ PixelStrip strips[] = {
 #define REMOTE true
 
 // controller pin 
-#define REMOTEPIN 1
+#define REMOTEPIN 3
 
 bool STARTANIMATION = false;
 bool ANIMATIONINPROGRESS = false;
@@ -101,16 +102,20 @@ unsigned long resetTimer = 1000;  // ms until currLoopTime and currLedGroup rese
 //bool waitForFinish = false; //if true, strips will wait for everyone to be ready before initiating next loop, ignores resetTimer
 bool triggered = false; // checks if the current HIGH input in pin has been acted upon, if false`, it will accept next input
 unsigned long triggeredTime = 0; // keeps track of the time passed since last trigger
-unsigned long triggeredWait = 5; // ms to wait until waiting for next press (to prevent double-triggers)
+unsigned long triggeredWait = 4; // ms to wait until waiting for next press (to prevent double-triggers)
+
+//PERFORMACE
+// unsigned long runsPerSec=0;
+// unsigned long prevrun=0;
 
 void setup()
 {
-  // Serial.begin(115200);
-  byte max_numleds = 0;
+  Serial.begin(115200);
+  int max_numleds = 0;
 
   if (REMOTE)
     pinMode(REMOTEPIN, INPUT);
-
+    pinMode(LED_BUILTIN, OUTPUT);
   for (int i = 0; i < NUMSTRIPS; i++)
   {
     if (strips[i].numleds > max_numleds)
@@ -137,6 +142,7 @@ void setup()
     strips[i].currled = 0;
   }
   delay(1000);
+ 
 }
 
 void screenWipe()
@@ -168,19 +174,40 @@ void screenWipe()
 
 void checkPin()
 {
+  //if(digitalRead(REMOTEPIN) == HIGH)
+  //Serial.println(digitalRead(REMOTEPIN));  
   if (digitalRead(REMOTEPIN) == HIGH && !triggered && ((unsigned long)(currentTime - triggeredTime) > triggeredWait))
   {
     if(currLedGroup==0)
+    {
       currLoopTime = 0;
-
+      currLoopTime = currentTime;
+    }
+    
+    Serial.print("Triggered from pin ");
+    Serial.print(REMOTEPIN);
+    Serial.print("\t");
+    Serial.println(currLedGroup);
     // The button is pressed, do something!
     triggered = true;
+    triggeredTime=currentTime;
+    digitalWrite(LED_BUILTIN, HIGH);  // Onboard LED feedback
+
   }
 
   if (triggered) //time to reset trigger
   {
+    
+    for (int i = 0; i < NUMSTRIPS; i++)
+    {
+      if (strips[i].ledGroup == currLedGroup)
+        strips[i].remoteStart = true;
+        
+    }
+    
     currLedGroup++;    
     triggered = false;
+    digitalWrite(LED_BUILTIN, LOW);  // Onboard LED feedback
 
     if(((unsigned long)(currentTime - currLoopTime) > resetTimer)) // time to reset loop
       currLedGroup = 0;
@@ -192,20 +219,36 @@ void checkPin()
 
 void loop()
 {
+  currentTime = millis();
   checkPin();  
-  if (!STARTANIMATION)
-    STARTANIMATION = digitalRead(REMOTEPIN) == HIGH ? true : false;
+  //if (!STARTANIMATION)
+  //  STARTANIMATION = digitalRead(REMOTEPIN) == HIGH ? true : false;
 
   // Serial.println(sizeof(strips));
   // Serial.println(sizeof(strips[0]));
   
   
-  currentTime = millis();
+  
+
+   
   if (currentTime > previousTime)
   {
+    
     meteorRain();
     previousTime = currentTime;
   }
+
+  // PERFORMANCE  
+  // if((unsigned long)(currentTime - prevrun) > resetTimer)
+  // {
+  //   Serial.println(currentTime - prevrun); 
+  //   Serial.println(runsPerSec); 
+  //   prevrun=currentTime;
+  //   runsPerSec=0;
+  // }
+
+    
+  // runsPerSec++;  
 }
 
 void printColor(Adafruit_NeoPixel *strip, int ledNo)
