@@ -39,6 +39,7 @@ typedef struct PixelStrip
   bool reverse;
   int ledGroup;
   bool remoteStart;  
+  bool remoteAnimation;
 } PixelStrip;
 
 /*************************************************************
@@ -64,17 +65,18 @@ fadeinstrength: 0-255 how bright is the fade-in. Bigger number = brighter
 reverse: set to true to reverse the animation
 ledGroup: used to group up different led strips to begin together e.g. strip 1 & 2, strip 3 & 4... Begin from 0
 remoteStart: used to determine when to start animation when using remote trigger. Leave as-is
+remoteAnimation: used to determine if animation is in progress when using remote trigger. Leave as-is
 *************************************************************/
 
 PixelStrip strips[] = {
-    // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse  ledGroup
-    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, false},
+    // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse  ledGroup remoteStart remoteAnimation
+    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, false, false},
     //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
-    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, false},
+    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, false, false},
     //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
 
 };
@@ -92,8 +94,7 @@ PixelStrip strips[] = {
 // controller pin 
 #define REMOTEPIN 3
 
-bool STARTANIMATION = false;
-bool ANIMATIONINPROGRESS = false;
+
 unsigned long previousTime = 0;  // to measure loop time per millisecond precisely
 unsigned long currentTime = 0;  // to keep track of current ms
 int currLedGroup = 0;
@@ -349,8 +350,8 @@ void meteorRain()
       s->currled = 0;
       if (REMOTE)
       {
-        STARTANIMATION = false;
-        ANIMATIONINPROGRESS = false;
+        s->remoteStart = false;
+        s->remoteAnimation = false;
       }
       else
       {
@@ -379,16 +380,16 @@ void meteorRain()
     // controls for remote
     if (REMOTE)
     {
-      if (!ANIMATIONINPROGRESS && !STARTANIMATION) // animation finished and waiting for pin trigger
+      if (!s->remoteAnimation && !s->remoteStart) // animation finished and waiting for pin trigger
         continue;
 
-      if (ANIMATIONINPROGRESS && STARTANIMATION) // pin trigger happened during animation, ignore
-        STARTANIMATION = false;
+      if (s->remoteAnimation  && s->remoteStart) // pin trigger happened during animation, ignore
+        s->remoteStart = false;
 
-      if (!ANIMATIONINPROGRESS && STARTANIMATION) // time to start animation!
-        ANIMATIONINPROGRESS = true;
+      if (!s->remoteAnimation  && s->remoteStart) // time to start animation!
+        s->remoteAnimation  = true;
 
-      // if(ANIMATIONINPROGRESS && !STARTANIMATION) // normal behaviour during animation
+      // if(s->remoteAnimation  && !s->remoteStart) // normal behaviour during animation
     }
 
     // beginning of random animation, extend countdown with random ticks
