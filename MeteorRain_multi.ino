@@ -70,13 +70,13 @@ remoteAnimation: used to determine if animation is in progress when using remote
 
 PixelStrip strips[] = {
     // strip            leds  pin                           red   green blue  meteorsize  meteortraildecay  meteorrandomdecay speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength reverse  ledGroup remoteStart remoteAnimation
-    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, false, false},
+    {Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 16, false, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, false, 0, false, false},
     //{ Adafruit_NeoPixel(40, 12, NEO_GRB + NEO_KHZ800), 210, 120, 50, 1, 64, true, 20, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 0, 0, 0, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 255, 255, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
     //{ Adafruit_NeoPixel(40, 8, NEO_GRB + NEO_KHZ800), 255, 10, 10, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 9, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
     //{ Adafruit_NeoPixel(40, 10, NEO_GRB + NEO_KHZ800), 10, 10, 255, 1, 64, true, 60, 0, 40, 0, true, 20, 0, 500, true, 0, 5000, 10, 10, 10, 2, 50, false },
-    {Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, false, false},
+    //{Adafruit_NeoPixel(40, 11, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 64, true, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 2, 32, true, 1, false, false},
     //{ Adafruit_NeoPixel(40, 13, NEO_GRB + NEO_KHZ800), 10, 255, 10, 1, 64, true, 50, 0, 40, 0, true, 500, 0, 500, true, 0, 5000, 10, 10, 10,  2, 50, false },
 
 };
@@ -185,10 +185,10 @@ void checkPin()
       currLoopTime = currentTime;
     }
     
-    Serial.print("Triggered from pin ");
-    Serial.print(REMOTEPIN);
-    Serial.print("\t");
-    Serial.println(currLedGroup);
+    // Serial.print("Triggered from pin ");
+    // Serial.print(REMOTEPIN);
+    // Serial.print("\t");
+    // Serial.println(currLedGroup);
     // The button is pressed, do something!
     triggered = true;
     triggeredTime=currentTime;
@@ -201,8 +201,14 @@ void checkPin()
     
     for (int i = 0; i < NUMSTRIPS; i++)
     {
-      if (strips[i].ledGroup == currLedGroup)
+      if (strips[i].ledGroup == currLedGroup && strips[i].remoteAnimation == false)
+      {
+        Serial.print("Triggered from pin ");
+        Serial.print(REMOTEPIN);
+        Serial.print("\t");
+        Serial.println(currLedGroup);
         strips[i].remoteStart = true;
+      }
         
     }
     
@@ -222,17 +228,8 @@ void loop()
 {
   currentTime = millis();
   checkPin();  
-  //if (!STARTANIMATION)
-  //  STARTANIMATION = digitalRead(REMOTEPIN) == HIGH ? true : false;
-
-  // Serial.println(sizeof(strips));
-  // Serial.println(sizeof(strips[0]));
-  
-  
-  
-
    
-  if (currentTime > previousTime)
+  if (currentTime - previousTime > 50)
   {
     
     meteorRain();
@@ -247,8 +244,6 @@ void loop()
   //   prevrun=currentTime;
   //   runsPerSec=0;
   // }
-
-    
   // runsPerSec++;  
 }
 
@@ -323,17 +318,17 @@ void applyGainStep(Adafruit_NeoPixel *strip, int ledNo, byte bgred, byte bggreen
   byte green = bggreen + ((((g - bggreen) / (numSteps + 1)) * currStep * str) / 256);
   byte blue = bgblue + ((((b - bgblue) / (numSteps + 1)) * currStep * str) / 256);
 
-  // if(ledNo == 20)
-  // {
-  // Serial.print("\t");
-  // Serial.print(currStep);
-  // Serial.print(" ");
-  // Serial.print(red);
-  // Serial.print(" ");
-  // Serial.print(green);
-  // Serial.print(" ");
-  // Serial.print(blue);
-  // }
+  if(ledNo == 0)
+  {
+  Serial.print("\t");
+  Serial.print(currStep);
+  Serial.print(" ");
+  Serial.print(red);
+  Serial.print(" ");
+  Serial.print(green);
+  Serial.print(" ");
+  Serial.print(blue);
+  }
 
   strip->setPixelColor(ledNo, red, green, blue);
 }
@@ -344,8 +339,22 @@ void meteorRain()
   for (int k = 0; k < NUMSTRIPS; k++)
   {
     PixelStrip* s = &strips[k];
+    // Serial.print(s->currled);
+    // Serial.print(" ");
+    // Serial.print(s->remoteAnimation);
+    // Serial.print(" ");
+    // Serial.print(s->remoteStart);
+    // Serial.print("  ");
+    // Serial.print(s->countdown);
+    
+    //Serial.print(currLedGroup);
+    //Serial.print(" ");
+    //Serial.print(s->remoteAnimation);
+    // Serial.print("\t");
+    // printColor(&(s->strip),35);
+    // Serial.println(" ");
     // end of meteor animation
-    if (s->currled > (s->numleds * 2) + s->fadeinlength)
+    if (s->currled > (s->numleds) + s->fadeinlength)
     {
       s->currled = 0;
       if (REMOTE)
@@ -387,8 +396,10 @@ void meteorRain()
         s->remoteStart = false;
 
       if (!s->remoteAnimation  && s->remoteStart) // time to start animation!
+      {
+        Serial.println("Starting now!");
         s->remoteAnimation  = true;
-
+      }
       // if(s->remoteAnimation  && !s->remoteStart) // normal behaviour during animation
     }
 
@@ -418,10 +429,8 @@ void meteorRain()
     // Serial.print(" ");
     // Serial.print(s->reverse?s->numleds - s->currled - 1:0);
 
-    // Serial.print("\t");
-    // printColor(&(s->strip),35);
-    // Serial.println(" ");
 
+  
     // fade brightness all LEDs one step
     for (int j = 0; j < s->currled - s->meteorsize - s->fadeinlength; j++)
     {
@@ -479,7 +488,7 @@ void meteorRain()
     showStrip(&(s->strip));
     s->currled++;
     s->countdown = s->speeddelay;
-    // Serial.println(" ");
+    //Serial.println(" ");
   }
   // delay(200);
 }
