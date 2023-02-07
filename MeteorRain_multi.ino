@@ -104,7 +104,7 @@ unsigned long triggeredWait = 4; // ms to wait until waiting for next press (to 
 
 void setup()
 {
-  Serial.begin(115200);
+  //Serial.begin(115200);
   int max_numleds = 0;
   Timer1.initialize(1000); // set the timer to trigger every 1 millisecond (1000 microseconds)
   Timer1.attachInterrupt(timerIsr); // attach the interrupt service routine (ISR)
@@ -199,10 +199,10 @@ void checkPin()
       currLedGroup = 0;
     }
       
-    Serial.print("Triggered from pin ");
-    Serial.print(REMOTEPIN);
-    Serial.print("\t");
-    Serial.println(currLedGroup);
+    // Serial.print("Triggered from pin ");
+    // Serial.print(REMOTEPIN);
+    // Serial.print("\t");
+    // Serial.println(currLedGroup);
     for (int i = 0; i < NUMSTRIPS; i++)
     {
       
