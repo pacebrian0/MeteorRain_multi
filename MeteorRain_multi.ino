@@ -268,31 +268,6 @@ void printColor(Adafruit_NeoPixel *strip, int ledNo)
   Serial.print("\t");
 }
 
-void fadeToColor(Adafruit_NeoPixel *strip, int ledNo, byte fadeValue, byte bgred, byte bggreen, byte bgblue)
-{
-
-  int32_t oldColor;
-  byte r, g, b;
-  int value;
-
-  oldColor = strip->getPixelColor(ledNo);
-  r = (oldColor & 0x00ff0000UL) >> 16;
-  g = (oldColor & 0x0000ff00UL) >> 8;
-  b = (oldColor & 0x000000ffUL);
-
-  r = (r <= bgred) ? bgred : (int)r - (r * fadeValue / 256) - 1;
-  g = (g <= bggreen) ? bggreen : (int)g - (g * fadeValue / 256) - 1;
-  b = (b <= bgblue) ? bgblue : (int)b - (b * fadeValue / 256) - 1;
-  // if(ledNo == 20){
-  // Serial.print(r);
-  // Serial.print(" ");
-  // Serial.print(g);
-  // Serial.print(" ");
-  // Serial.print(b);
-  // Serial.println(" ");
-  // }
-  strip->setPixelColor(ledNo, r, g, b);
-}
 
 void showStrip(Adafruit_NeoPixel *strip)
 {
@@ -338,29 +313,6 @@ void applyGainStep(Adafruit_NeoPixel *strip, int ledNo, byte bgred, byte bggreen
   strip->setPixelColor(ledNo, red, green, blue);
 }
 
-void applyFadeStep(Adafruit_NeoPixel *strip, int ledNo, byte bgred, byte bggreen, byte bgblue, byte r, byte g, byte b, byte currStep, byte numSteps, byte str)
-{
- byte red = r - ((((r - bgred) / (numSteps)) * currStep * str) / 256);
- byte green = g - ((((g - bggreen) / (numSteps)) * currStep * str) / 256);
- byte blue = b - ((((b - bgblue) / (numSteps)) * currStep * str) / 256);
-
-
-  //  if(ledNo == 0)
-  // {
-  // Serial.print("\t");
-  Serial.print(ledNo);
-  Serial.print(" ");
-  Serial.print(currStep);
-  Serial.print(" ");
-  Serial.print(red);
-  Serial.print(" ");
-  Serial.print(green);
-  Serial.print(" ");
-  Serial.print(blue);
-  // }
-
-  strip->setPixelColor(ledNo, red, green, blue);
-}
 
 void meteorRain()
 {
@@ -383,7 +335,7 @@ void meteorRain()
     // printColor(&(s->strip),35);
     // Serial.println(" ");
     // end of meteor animation
-    if (s->currled > (s->numleds) + s->fadeinlength + s->fadeoutlength)
+    if (s->currled > (s->numleds) + s->fadeinlength + s->fadeoutlength + 1)
     {
       s->currled = 0;
       if (REMOTE)
@@ -510,7 +462,7 @@ void meteorRain()
             Serial.print(s->currled - j);
           Serial.print(": ");
           if (s->reverse)
-            applyGainStep(&(s->strip), s->numleds - s->currled - 1 + j, s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1, s->fadeinlength, s->fadeinstrength);
+            applyGainStep(&(s->strip), s->numleds - s->currled - 1 + j, s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1, s->fadeinlength , s->fadeinstrength);
           else
             applyGainStep(&(s->strip), s->currled - j, s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1, s->fadeinlength, s->fadeinstrength);
           // gainToColor(&(s->strip), s->currled - j, 64, s->red, s->green, s->blue);
@@ -552,13 +504,15 @@ void meteorRain()
         {
           Serial.print(" losing RGB ");
           if(s->reverse)    
-            Serial.print(s->numleds - s->currled - 1 + j );
+            Serial.print(s->numleds - s->currled + s->meteorsize + 1 + j );  
           else
             Serial.print(s->currled - s->meteorsize - s->fadeinlength - j );
           Serial.print(": ");
           
           if (s->reverse)
-            applyFadeStep(&(s->strip),s->numleds - s->currled - 1 + j , s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1 , s->fadeoutlength, s->fadeoutstrength);
+            //applyFadeStep(&(s->strip),s->numleds - s->currled + s->meteorsize + 1  + j , s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1 , s->fadeoutlength, s->fadeoutstrength);
+            applyGainStep(&(s->strip), s->numleds - s->currled + s->meteorsize + 1 + j, s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, s->fadeoutlength -j , s->fadeoutlength, s->fadeoutstrength);
+
           else
             //applyGainStep(&(s->strip), s->currled - j, s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1, s->fadeinlength, s->fadeinstrength);
             applyFadeStep(&(s->strip), s->currled - s->meteorsize - s->fadeinlength - j , s->bgred, s->bggreen, s->bgblue, s->red, s->green, s->blue, j + 1 , s->fadeoutlength, s->fadeoutstrength);
@@ -570,8 +524,8 @@ void meteorRain()
           if (s->reverse)
           {
             Serial.print(" bg at ");   
-            Serial.print(s->numleds - s->currled + j - 1);     
-            setPixel(&s->strip, s->numleds - s->currled + j - 1, s->red, s->green, s->blue);
+            Serial.print(s->numleds - s->currled + s->meteorsize + 1 + j);     
+            setPixel(&s->strip, s->numleds - s->currled + s->meteorsize + 1 + j, s->bgred, s->bggreen, s->bgblue);
           }
             
           else
