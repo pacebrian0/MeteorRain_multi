@@ -69,9 +69,9 @@ remoteAnimation: used to determine if animation is in progress when using remote
 *************************************************************/
 
 PixelStrip strips[] = {
-    // strip            leds  pin                           red   green blue  meteorsize   speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue fadeinlength fadeinstrength fadeoutlength fadeoutstrength reverse  ledGroup remoteStart remoteAnimation
-    {Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 150, 75, 30, 1, 50, 0, 40, 0, false, 500, 0, 500, false, 0, 5000, 16, 8, 4, 2, 127, 2, 127, false, 0, false, false},
-    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 255, 255, 255, 1, 60, 0, 40, 0, false, 20, 0, 500, false, 0, 5000, 2, 2, 2, 5, 32, 5, 32, true, 1, false, false},
+    // strip            leds  pin                    Red  green blue  meteorsize  speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue  fadeinlength  fadeinstrength  fadeoutlength fadeoutstrength reverse   ledGroup  remoteStart remoteAnimation
+    {Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 150, 75,   30,   1,          50,         0,          40,     0,            false,      0,        0,                    500,                false,        0,                      5000,                 16,     8,        4,      2,            127,            2,            127,            false,    0,        false,      false},
+    {Adafruit_NeoPixel(40, 6, NEO_GRB + NEO_KHZ800), 255, 255,  255,  1,          60,         0,          40,     0,            false,      0,        0,                    500,                false,        0,                      5000,                 2,      2,        2,      5,            32,             5,            32,             false,    1,        false,      false},
 
 
 };
@@ -109,8 +109,10 @@ void setup()
   Timer1.initialize(1000); // set the timer to trigger every 1 millisecond (1000 microseconds)
   Timer1.attachInterrupt(timerIsr); // attach the interrupt service routine (ISR)
   if (REMOTE)
+  {
     pinMode(REMOTEPIN, INPUT);
     pinMode(LED_BUILTIN, OUTPUT);
+  }
   for (int i = 0; i < NUMSTRIPS; i++)
   {
     if (strips[i].numleds > max_numleds)
@@ -225,7 +227,8 @@ void checkPin()
 void loop()
 {
   //currentTime = millis();
-  checkPin();  
+  if(REMOTE)
+    checkPin();  
    
   if (currentTime - previousTime > 0) // any number other than 0 will stack multiplicatively with the speed modifier 
   {
