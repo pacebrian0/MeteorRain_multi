@@ -68,6 +68,7 @@ remoteStart: used to determine when to start animation when using remote trigger
 remoteAnimation: used to determine if animation is in progress when using remote trigger. Leave as-is
 *************************************************************/
 
+// CONFIGURE-----------------------------
 PixelStrip strips[] = {
     // strip            leds  pin                    Red  green blue  meteorsize  speeddelay  currled(0)  numleds countdown(0)  endrandom   enddelay  randomenddelaystart   randomenddelayend   beginrandom   randombegindelaystart   randombegindelayend   bgred   bggreen   bgblue  fadeinlength  fadeinstrength  fadeoutlength fadeoutstrength reverse   ledGroup  remoteStart remoteAnimation
     {Adafruit_NeoPixel(40, 7, NEO_GRB + NEO_KHZ800), 150, 75,   30,   1,          50,         0,          40,     0,            false,      0,        0,                    500,                false,        0,                      5000,                 16,     8,        4,      2,            127,            2,            127,            false,    0,        false,      false},
@@ -78,27 +79,21 @@ PixelStrip strips[] = {
 
 };
 
-// Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRB + NEO_KHZ800);
+#define WIPESPEED 50 // speed for screen wipe at the beginning
+#define REMOTE true  // enable controller trigger
+#define REMOTEPIN 3  // controller pin 
+//------------------------------------------
 
+// DO NOT TOUCH-----------------------------
 #define NUMSTRIPS (sizeof(strips) / sizeof(strips[0]))
-
-// speed for screen wipe at the beginning
-#define WIPESPEED 50
-
-// enable controller trigger
-#define REMOTE true
-
-// controller pin 
-#define REMOTEPIN 3
-
 byte maxGroups = 0;
 unsigned long previousTime = 0;  // to measure loop time per millisecond precisely
 unsigned long currentTime = 0;  // to keep track of current ms
 int currLedGroup = 0;
-//bool waitForFinish = false; //if true, strips will wait for everyone to be ready before initiating next loop, ignores resetTimer
 bool triggered = false; // checks if the current HIGH input in pin has been acted upon, if false`, it will accept next input
 unsigned long triggeredTime = 0; // keeps track of the time passed since last trigger
 unsigned long triggeredWait = 4; // ms to wait until waiting for next press (to prevent double-triggers)
+//------------------------------------------
 
 //PERFORMACE
 // unsigned long runsPerSec=0;
